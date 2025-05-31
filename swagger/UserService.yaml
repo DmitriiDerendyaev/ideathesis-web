@@ -1,0 +1,323 @@
+openapi: 3.0.3
+info:
+  title: User Service API
+  description: API for managing users, students, and employees
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Local server
+paths:
+  /api/users:
+    get:
+      summary: Get all users
+      operationId: getAllUsers
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserAllDto'
+  /api/users/{guid}:
+    get:
+      summary: Get user by GUID
+      operationId: getUserById
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAllDto'
+        '404':
+          description: User not found
+  /api/students:
+    get:
+      summary: Get all students
+      operationId: getAllStudents
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StudentAllDto'
+  /api/students/{guid}:
+    get:
+      summary: Get student by GUID
+      operationId: getStudentById
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentAllDto'
+        '404':
+          description: Student not found
+  /api/employees:
+    get:
+      summary: Get all employees
+      operationId: getAllEmployees
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EmployeeAllDto'
+  /api/employees/{guid}:
+    get:
+      summary: Get employee by GUID
+      operationId: getEmployeeById
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeAllDto'
+        '404':
+          description: Employee not found
+  /api/employees/search:
+    get:
+      summary: Search employees by full name
+      operationId: searchEmployeesByFullName
+      parameters:
+        - name: fullName
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EmployeeAllDto'
+components:
+  schemas:
+    UserAllDto:
+      type: object
+      properties:
+        guid:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        middleName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        userType:
+          type: string
+        version:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    StudentAllDto:
+      type: object
+      properties:
+        guid:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        middleName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        userType:
+          type: string
+        version:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        course:
+          type: integer
+        startYear:
+          type: integer
+        studentGroup:
+          $ref: '#/components/schemas/StudentGroupDto'
+        department:
+          $ref: '#/components/schemas/DepartmentDto'
+        degreeLevel:
+          $ref: '#/components/schemas/DegreeLevelDto'
+        degreeForm:
+          $ref: '#/components/schemas/DegreeFormDto'
+    EmployeeAllDto:
+      type: object
+      properties:
+        guid:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        middleName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        userType:
+          type: string
+        version:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        surname:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date-time
+        employeeEmployments:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmployeeEmploymentAllDto'
+    EmployeeEmploymentAllDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        employeeGuid:
+          type: string
+          format: uuid
+        jobTitle:
+          $ref: '#/components/schemas/JobTitleDto'
+        staffCategory:
+          $ref: '#/components/schemas/StaffCategoryDto'
+        employmentType:
+          $ref: '#/components/schemas/EmploymentTypeDto'
+        subdivision:
+          $ref: '#/components/schemas/SubdivisionDto'
+        jobState:
+          type: string
+    JobTitleDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+    StaffCategoryDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+    EmploymentTypeDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+    SubdivisionDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        guid:
+          type: string
+          format: uuid
+    StudentGroupDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+    DepartmentDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+    DegreeLevelDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+    DegreeFormDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
