@@ -11,7 +11,25 @@ const TopicDetails = () => <div>Topic Details Page</div>;
 const NotificationList = () => <div>Notification List Page</div>;
 
 const theme = createTheme({
-  // Настройки темы будут добавлены позже
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 600,
+      md: 900,
+      lg: 1200,
+      xl: 1536,
+    },
+  },
+  components: {
+    MuiContainer: {
+      styleOverrides: {
+        root: {
+          width: '100%',
+          margin: 0,
+        },
+      },
+    },
+  },
 });
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
