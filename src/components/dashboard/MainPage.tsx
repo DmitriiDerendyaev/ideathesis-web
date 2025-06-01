@@ -127,16 +127,16 @@ const MainPage: React.FC = () => {
 
       {/* Profile */}
       <Container maxWidth={false} sx={{ px: { xs: 2, sm: 4, md: 6 }, py: 4 }}>
-        <Paper elevation={3} sx={{ py: 4, px: { xs: 2, sm: 4 }, bgcolor: 'background.paper' }}>
+        <Paper elevation={3} sx={{ py: 4, px: { xs: 2, sm: 4 }, bgcolor: 'background.paper', width: '100%' }}>
           <Box display="flex" alignItems="center">
             <Avatar sx={{ width: 80, height: 80, bgcolor: 'primary.main', mr: 3 }}>
               {profile.fullName ? profile.fullName[0] : ''}
             </Avatar>
             <Box>
               <Typography variant="h5" fontWeight={700} color="text.primary">{profile.fullName}</Typography>
-              <Button size="small" variant="contained" color="primary" sx={{ mt: 1, mb: 1 }}>{
-
-profile.role || 'Преподаватель'}</Button>
+              <Button size="small" variant="contained" color="primary" sx={{ mt: 1, mb: 1 }}>
+                {profile.role || 'Преподаватель'}
+              </Button>
               <Typography variant="body1" color="text.secondary">Добро пожаловать! Здесь вы можете управлять заявками студентов.</Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>Email: {profile.email || '—'}</Typography>
             </Box>
@@ -151,7 +151,7 @@ profile.role || 'Преподаватель'}</Button>
           <Box flex={{ md: 2 }} width="100%">
             <Typography variant="h3" fontWeight={700} mb={1} color="text.primary">Список заявок</Typography>
             <Typography variant="subtitle1" mb={3} color="text.secondary">Последние заявки, требующие действий</Typography>
-            <Box>
+            <Box sx={{ width: '100%' }}>
               {pendingTopics.length === 0 && (
                 <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 1, mb: 2, bgcolor: 'background.paper', width: '100%' }}>
                   <Typography color="text.secondary">Нет заявок</Typography>
@@ -176,6 +176,7 @@ profile.role || 'Преподаватель'}</Button>
                         boxShadow: 3,
                         border: `2px solid ${theme.palette.primary.main}`,
                       },
+                      width: '100%',
                     }}
                     onClick={() => handleSelectTopic(pending)}
                   >
@@ -203,7 +204,7 @@ profile.role || 'Преподаватель'}</Button>
           <Box flex={{ md: 1 }} width="100%">
             <Typography variant="h3" fontWeight={700} mb={1} color="text.primary">Детали заявки</Typography>
             <Typography mb={2} color="text.secondary">Здесь вы можете утвердить, отклонить или запросить уточнения по заявке.</Typography>
-            <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 2, bgcolor: 'background.paper' }}>
+            <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 2, bgcolor: 'background.paper', width: '100%' }}>
               {selectedTopic ? (
                 <>
                   <Typography variant="h6" fontWeight={700} mb={1} color="text.primary">{selectedTopic.topic.title}</Typography>
