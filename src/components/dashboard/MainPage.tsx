@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  AppBar, Toolbar, Typography, Button, Box, Container, Paper, Avatar, TextField, List, ListItem, ListItemAvatar, ListItemText, ListItemSecondaryAction, CircularProgress, Alert, InputBase
+  AppBar, Toolbar, Typography, Button, Box, Container, Paper, Avatar, TextField, CircularProgress, Alert, InputBase
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -11,6 +11,7 @@ import { topicsService } from '../../services/topics.service';
 import { useNavigate } from 'react-router-dom';
 import type { Topic, User } from '../../types';
 import { TopicStatus } from '../../types';
+import { useTheme } from '@mui/material/styles';
 
 interface PendingTopic {
   topic: Topic;
@@ -28,6 +29,7 @@ const MainPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [studentNames, setStudentNames] = useState<Record<string, string>>({});
+  const theme = useTheme();
 
   useEffect(() => {
     const fetchProfileAndTopics = async () => {
@@ -36,11 +38,9 @@ const MainPage: React.FC = () => {
         setLoading(true);
         const profileData = await usersService.getEmployeeByGuid(user.guid);
         setProfile(profileData);
-        // Получаем заявки (с studentGuid)
         const response = await topicsService.getPendingTopicsRaw(user.guid);
         setPendingTopics(response);
         if (response.length > 0) setSelectedTopic(response[0]);
-        // Получаем ФИО студентов
         const uniqueGuids = Array.from(new Set(response.map((item: any) => item.studentGuid)));
         const names: Record<string, string> = {};
         await Promise.all(uniqueGuids.map(async (guid) => {
@@ -68,15 +68,13 @@ const MainPage: React.FC = () => {
     if (!selectedTopic) return;
     setLoading(true);
     try {
-      // 1. Отправить комментарий
       const commentText = comment.trim() ||
         (status === TopicStatus.APPROVED ? 'Утвердить' : status === TopicStatus.REJECTED ? 'Отклонить' : 'Требуется уточнение');
       await topicsService.addComment(
         selectedTopic.topic.id,
         commentText,
-        profile?.guid || '' // X-Teacher-Guid (если потребуется)
+        profile?.guid || ''
       );
-      // 2. Изменить статус заявки с X-Student-Guid
       await topicsService.updateTopicStatusWithStudent(
         selectedTopic.topic.id,
         status,
@@ -92,109 +90,126 @@ const MainPage: React.FC = () => {
     }
   };
 
-  if (loading || !profile) return <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh"><CircularProgress /></Box>;
+  if (loading || !profile) return (
+    <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+      <CircularProgress />
+    </Box>
+  );
   if (error) return <Alert severity="error">{error}</Alert>;
 
   return (
-    <Box minHeight="100vh" display="flex" flexDirection="column">
+    <Box minHeight="100vh" display="flex" flexDirection="column" width="100%">
       {/* Header */}
-      <AppBar position="static" color="default" elevation={0} sx={{ bgcolor: '#eee' }}>
+      <AppBar position="static" color="primary" elevation={1}>
         <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700 }}>
+          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700, color: 'common.white' }}>
             Управление темами ВКР
           </Typography>
           <Button color="inherit">Главная</Button>
           <Button color="inherit">Уведомления</Button>
-          <Box sx={{ mx: 2, display: 'flex', alignItems: 'center', bgcolor: '#fff', borderRadius: 1, px: 1 }}>
-            <SearchIcon sx={{ color: '#888' }} />
-            <InputBase placeholder="Search in site" sx={{ ml: 1, flex: 1 }} />
+          <Box sx={{ mx: 2, display: 'flex', alignItems: 'center', bgcolor: 'background.paper', borderRadius: 1, px: 1 }}>
+            <SearchIcon sx={{ color: 'text.secondary' }} />
+            <InputBase placeholder="Search in site" sx={{ ml: 1, flex: 1, color: 'text.primary' }} />
           </Box>
-          <Button variant="contained" color="inherit" sx={{ ml: 2, bgcolor: '#222', color: '#fff', '&:hover': { bgcolor: '#000' } }} onClick={logout} startIcon={<LogoutIcon />}>Выход</Button>
+          <Button variant="outlined" color="inherit" sx={{ ml: 2 }} onClick={logout} startIcon={<LogoutIcon />}>
+            Выход
+          </Button>
         </Toolbar>
       </AppBar>
 
       {/* Profile */}
-      <Box sx={{ bgcolor: '#555', color: '#fff', py: 4, px: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Box display="flex" alignItems="center">
-          <Avatar sx={{ width: 80, height: 80, bgcolor: '#bbb', mr: 3 }} />
-          <Box>
-            <Typography variant="h5" fontWeight={700}>{profile.fullName}</Typography>
-            <Button size="small" variant="contained" sx={{ mt: 1, mb: 1, bgcolor: '#888' }}>{profile.role || 'Преподаватель'}</Button>
-            <Typography>Добро пожаловать! Здесь вы можете управлять заявками студентов.</Typography>
-            <Typography variant="body2" sx={{ mt: 1 }}>Email: {profile.email || '—'}</Typography>
+      <Container maxWidth={false} sx={{ px: { xs: 2, sm: 4, md: 6 }, py: 4 }}>
+        <Paper elevation={3} sx={{ py: 4, px: { xs: 2, sm: 4 }, bgcolor: 'background.paper' }}>
+          <Box display="flex" alignItems="center">
+            <Avatar sx={{ width: 80, height: 80, bgcolor: 'primary.main', mr: 3 }}>
+              {profile.fullName ? profile.fullName[0] : ''}
+            </Avatar>
+            <Box>
+              <Typography variant="h5" fontWeight={700} color="text.primary">{profile.fullName}</Typography>
+              <Button size="small" variant="contained" color="primary" sx={{ mt: 1, mb: 1 }}>{
+
+profile.role || 'Преподаватель'}</Button>
+              <Typography variant="body1" color="text.secondary">Добро пожаловать! Здесь вы можете управлять заявками студентов.</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>Email: {profile.email || '—'}</Typography>
+            </Box>
           </Box>
-        </Box>
-        <Box />
-      </Box>
+        </Paper>
+      </Container>
 
       {/* Main Content */}
-      <Container maxWidth={false} disableGutters sx={{ flex: 1, py: 4, width: '100%' }}>
-        <Box display="flex" gap={6} alignItems="flex-start">
+      <Container maxWidth={false} sx={{ flex: 1, py: 4, px: { xs: 2, sm: 4, md: 6 } }}>
+        <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} gap={{ xs: 4, md: 6 }} alignItems="flex-start">
           {/* Список заявок 2/3 */}
-          <Box flex={2} sx={{ pl: 6 }}>
-            <Typography variant="h3" fontWeight={700} mb={1}>Список заявок</Typography>
-            <Typography variant="subtitle1" mb={3} color="#444">Последние заявки, требующие действий</Typography>
+          <Box flex={{ md: 2 }} width="100%">
+            <Typography variant="h3" fontWeight={700} mb={1} color="text.primary">Список заявок</Typography>
+            <Typography variant="subtitle1" mb={3} color="text.secondary">Последние заявки, требующие действий</Typography>
             <Box>
               {pendingTopics.length === 0 && (
-                <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 1, mb: 2 }}>
-                  <Typography>Нет заявок</Typography>
+                <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 1, mb: 2, bgcolor: 'background.paper' }}>
+                  <Typography color="text.secondary">Нет заявок</Typography>
                 </Paper>
               )}
-              {pendingTopics.map((pending) => (
-                <Paper
-                  key={pending.topic.id}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    p: 2,
-                    mb: 2,
-                    borderRadius: 2,
-                    boxShadow: selectedTopic?.topic.id === pending.topic.id ? 4 : 1,
-                    border: selectedTopic?.topic.id === pending.topic.id ? '2px solid #1976d2' : '1px solid #eee',
-                    cursor: 'pointer',
-                    transition: 'box-shadow 0.2s, border 0.2s',
-                    '&:hover': { boxShadow: 3, border: '2px solid #1976d2' },
-                  }}
-                  onClick={() => handleSelectTopic(pending)}
-                >
-                  <Avatar sx={{ bgcolor: '#ffe082', width: 56, height: 56, mr: 2 }}>
-                    <EmojiEmotionsIcon fontSize="large" />
-                  </Avatar>
-                  <Box flex={1}>
-                    <Typography fontWeight={700} fontSize={18}>{pending.topic.title}</Typography>
-                    <Typography color="#888" fontSize={15} mt={0.5}>
-                      {studentNames[pending.studentGuid] || pending.studentGuid}
-                    </Typography>
-                  </Box>
-                  <Box minWidth={180} textAlign="right">
-                    <Typography color="#888" fontSize={14}>
-                      {pending.createdAt ? new Date(pending.createdAt).toLocaleString() : '—'}
-                    </Typography>
-                  </Box>
-                </Paper>
-              ))}
+              {pendingTopics.map((pending) => {
+                const isSelected = selectedTopic?.topic.id === pending.topic.id;
+                return (
+                  <Paper
+                    key={pending.topic.id}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      p: 2,
+                      mb: 2,
+                      borderRadius: 2,
+                      boxShadow: isSelected ? 4 : 1,
+                      border: isSelected ? `2px solid ${theme.palette.primary.main}` : `1px solid ${theme.palette.divider}`,
+                      cursor: 'pointer',
+                      transition: 'box-shadow 0.2s, border 0.2s',
+                      '&:hover': {
+                        boxShadow: 3,
+                        border: `2px solid ${theme.palette.primary.main}`,
+                      },
+                    }}
+                    onClick={() => handleSelectTopic(pending)}
+                  >
+                    <Avatar sx={{ bgcolor: 'warning.main', width: 56, height: 56, mr: 2 }}>
+                      <EmojiEmotionsIcon fontSize="large" />
+                    </Avatar>
+                    <Box flex={1}>
+                      <Typography fontWeight={700} fontSize={18} color="text.primary">{pending.topic.title}</Typography>
+                      <Typography color="text.secondary" fontSize={15} mt={0.5}>
+                        {studentNames[pending.studentGuid] || pending.studentGuid}
+                      </Typography>
+                    </Box>
+                    <Box minWidth={180} textAlign="right">
+                      <Typography color="text.secondary" fontSize={14}>
+                        {pending.createdAt ? new Date(pending.createdAt).toLocaleString() : '—'}
+                      </Typography>
+                    </Box>
+                  </Paper>
+                );
+              })}
             </Box>
           </Box>
 
           {/* Детали заявки 1/3 */}
-          <Box flex={1} sx={{ pr: 6 }}>
-            <Typography variant="h3" fontWeight={700} mb={1}>Детали заявки</Typography>
-            <Typography mb={2} color="#444">Здесь вы можете утвердить, отклонить или запросить уточнения по заявке.</Typography>
-            <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 2 }}>
+          <Box flex={{ md: 1 }} width="100%">
+            <Typography variant="h3" fontWeight={700} mb={1} color="text.primary">Детали заявки</Typography>
+            <Typography mb={2} color="text.secondary">Здесь вы можете утвердить, отклонить или запросить уточнения по заявке.</Typography>
+            <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 2, bgcolor: 'background.paper' }}>
               {selectedTopic ? (
                 <>
-                  <Typography variant="h6" fontWeight={700} mb={1}>{selectedTopic.topic.title}</Typography>
-                  <Typography color="#666" mb={1}><b>Описание:</b> {selectedTopic.topic.description}</Typography>
+                  <Typography variant="h6" fontWeight={700} mb={1} color="text.primary">{selectedTopic.topic.title}</Typography>
+                  <Typography color="text.secondary" mb={1}><b>Описание:</b> {selectedTopic.topic.description}</Typography>
                   {selectedTopic.topic.actuality && (
-                    <Typography color="#666" mb={1}><b>Актуальность:</b> {selectedTopic.topic.actuality}</Typography>
+                    <Typography color="text.secondary" mb={1}><b>Актуальность:</b> {selectedTopic.topic.actuality}</Typography>
                   )}
                   {selectedTopic.topic.problems && (
-                    <Typography color="#666" mb={1}><b>Проблемы:</b> {selectedTopic.topic.problems}</Typography>
+                    <Typography color="text.secondary" mb={1}><b>Проблемы:</b> {selectedTopic.topic.problems}</Typography>
                   )}
                   {selectedTopic.topic.recommendedSkills && selectedTopic.topic.recommendedSkills.length > 0 && (
-                    <Typography color="#666" mb={1}><b>Навыки:</b> {selectedTopic.topic.recommendedSkills.join(', ')}</Typography>
+                    <Typography color="text.secondary" mb={1}><b>Навыки:</b> {selectedTopic.topic.recommendedSkills.join(', ')}</Typography>
                   )}
-                  <Typography color="#888" mb={2}><b>Статус:</b> {selectedTopic.topic.status}</Typography>
+                  <Typography color="text.secondary" mb={2}><b>Статус:</b> {selectedTopic.topic.status}</Typography>
                   <TextField
                     label="Комментарий"
                     fullWidth
@@ -204,14 +219,14 @@ const MainPage: React.FC = () => {
                     onChange={e => setComment(e.target.value)}
                     sx={{ mb: 2 }}
                   />
-                  <Box display="flex" gap={2}>
+                  <Box display="flex" gap={2} flexWrap="wrap">
                     <Button variant="outlined" color="error" sx={{ fontWeight: 700, px: 4, py: 1, borderWidth: 2 }} onClick={() => handleDecision(TopicStatus.REJECTED)}>Отклонить</Button>
-                    <Button variant="contained" sx={{ bgcolor: '#000', color: '#fff', fontWeight: 700, px: 4, py: 1, borderRadius: 2, '&:hover': { bgcolor: '#222' } }} onClick={() => handleDecision(TopicStatus.APPROVED)}>Утвердить</Button>
+                    <Button variant="contained" color="success" sx={{ fontWeight: 700, px: 4, py: 1, borderRadius: 2 }} onClick={() => handleDecision(TopicStatus.APPROVED)}>Утвердить</Button>
                     <Button variant="outlined" color="primary" sx={{ fontWeight: 700, px: 4, py: 1, borderWidth: 2 }} onClick={() => handleDecision(TopicStatus.PENDING)}>Требуется уточнение</Button>
                   </Box>
                 </>
               ) : (
-                <Typography color="#888">Выберите заявку из списка</Typography>
+                <Typography color="text.secondary">Выберите заявку из списка</Typography>
               )}
             </Paper>
           </Box>
@@ -219,9 +234,9 @@ const MainPage: React.FC = () => {
       </Container>
 
       {/* Footer */}
-      <Box sx={{ bgcolor: '#fafafa', py: 3, borderTop: '1px solid #eee', mt: 'auto' }}>
-        <Container maxWidth="lg">
-          <Box display="flex" justifyContent="center" gap={6}>
+      <Box sx={{ bgcolor: 'grey.50', py: 3, borderTop: `1px solid ${theme.palette.divider}`, mt: 'auto' }}>
+        <Container maxWidth={false} sx={{ px: { xs: 2, sm: 4, md: 6 } }}>
+          <Box display="flex" justifyContent="center" gap={{ xs: 2, sm: 6 }} flexWrap="wrap">
             <Button color="inherit">Контакты</Button>
             <Button color="inherit">Помощь</Button>
             <Button color="inherit">О системе</Button>
@@ -232,4 +247,4 @@ const MainPage: React.FC = () => {
   );
 };
 
-export default MainPage; 
+export default MainPage;
