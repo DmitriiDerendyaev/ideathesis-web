@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
-  AppBar, Toolbar, Typography, Button, Box, Container, Paper, Avatar, TextField, CircularProgress, Alert, InputBase
+  AppBar, Toolbar, Typography, Button, Box, Container, Paper, Avatar, TextField, CircularProgress, Alert, InputBase,
+  ButtonGroup
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -30,6 +31,8 @@ const MainPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [studentNames, setStudentNames] = useState<Record<string, string>>({});
   const theme = useTheme();
+  const isCommentEmpty = comment.trim() === '';
+  const [commentErrorMessage, setCommentErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProfileAndTopics = async () => {
@@ -66,6 +69,10 @@ const MainPage: React.FC = () => {
   const handleSelectTopic = (pending: PendingTopic) => setSelectedTopic(pending);
   const handleDecision = async (status: TopicStatus) => {
     if (!selectedTopic) return;
+    if (isCommentEmpty) {
+      setCommentErrorMessage('Необходимо ввести комментарий.');
+      return;
+    }
     setLoading(true);
     try {
       const commentText = comment.trim() ||
@@ -83,6 +90,7 @@ const MainPage: React.FC = () => {
       setPendingTopics((prev) => prev.filter((t) => t.topic.id !== selectedTopic.topic.id));
       setSelectedTopic(null);
       setComment('');
+      setCommentErrorMessage(null);
     } catch {
       setError('Ошибка при отправке решения');
     } finally {
@@ -138,14 +146,14 @@ profile.role || 'Преподаватель'}</Button>
 
       {/* Main Content */}
       <Container maxWidth={false} sx={{ flex: 1, py: 4, px: { xs: 2, sm: 4, md: 6 } }}>
-        <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} gap={{ xs: 4, md: 6 }} alignItems="flex-start">
+        <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} gap={{ xs: 4, md: 6 }} alignItems="flex-start" width="100%">
           {/* Список заявок 2/3 */}
           <Box flex={{ md: 2 }} width="100%">
             <Typography variant="h3" fontWeight={700} mb={1} color="text.primary">Список заявок</Typography>
             <Typography variant="subtitle1" mb={3} color="text.secondary">Последние заявки, требующие действий</Typography>
             <Box>
               {pendingTopics.length === 0 && (
-                <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 1, mb: 2, bgcolor: 'background.paper' }}>
+                <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 1, mb: 2, bgcolor: 'background.paper', width: '100%' }}>
                   <Typography color="text.secondary">Нет заявок</Typography>
                 </Paper>
               )}
@@ -216,13 +224,47 @@ profile.role || 'Преподаватель'}</Button>
                     multiline
                     rows={3}
                     value={comment}
-                    onChange={e => setComment(e.target.value)}
+                    onChange={e => {
+                      setComment(e.target.value);
+                      if (commentErrorMessage && e.target.value.trim() !== '') {
+                        setCommentErrorMessage(null);
+                      }
+                    }}
                     sx={{ mb: 2 }}
                   />
-                  <Box display="flex" gap={2} flexWrap="wrap">
-                    <Button variant="outlined" color="error" sx={{ fontWeight: 700, px: 4, py: 1, borderWidth: 2 }} onClick={() => handleDecision(TopicStatus.REJECTED)}>Отклонить</Button>
-                    <Button variant="contained" color="success" sx={{ fontWeight: 700, px: 4, py: 1, borderRadius: 2 }} onClick={() => handleDecision(TopicStatus.APPROVED)}>Утвердить</Button>
-                    <Button variant="outlined" color="primary" sx={{ fontWeight: 700, px: 4, py: 1, borderWidth: 2 }} onClick={() => handleDecision(TopicStatus.PENDING)}>Требуется уточнение</Button>
+                  {commentErrorMessage && (
+                    <Alert severity="warning" sx={{ mb: 2 }}>
+                      {commentErrorMessage}
+                    </Alert>
+                  )}
+                  <Box display="flex" flexDirection="column" gap={2}>
+                    <ButtonGroup fullWidth variant="outlined" aria-label="Требуется уточнение button group">
+                      <Button
+                        color="primary"
+                        sx={{ fontWeight: 700, py: 1, borderWidth: 2 }}
+                        onClick={() => handleDecision(TopicStatus.PENDING)}
+                      >
+                        Требуется уточнение
+                      </Button>
+                    </ButtonGroup>
+                    <ButtonGroup fullWidth aria-label="Отклонить и Утвердить button group">
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        sx={{ fontWeight: 700, py: 1, borderWidth: 2 }}
+                        onClick={() => handleDecision(TopicStatus.REJECTED)}
+                      >
+                        Отклонить
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="success"
+                        sx={{ fontWeight: 700, py: 1, borderRadius: 2 }}
+                        onClick={() => handleDecision(TopicStatus.APPROVED)}
+                      >
+                        Утвердить
+                      </Button>
+                    </ButtonGroup>
                   </Box>
                 </>
               ) : (
