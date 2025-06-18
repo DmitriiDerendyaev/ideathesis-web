@@ -21,7 +21,7 @@ interface PendingTopic {
 }
 
 const MainPage: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout } = useAuth(); 
   const navigate = useNavigate();
   const [profile, setProfile] = useState<User | null>(null);
   const [pendingTopics, setPendingTopics] = useState<PendingTopic[]>([]);

@@ -5,9 +5,9 @@ const axiosInstance = getAxiosInstance('auth');
 
 export const authService = {
   async login(username: string, password: string): Promise<AuthTokens & { user?: User }> {
-    const response = await axiosInstance.post('/api/v1/bot-login', {
-      ulogin: username,
-      upassword: password,
+    const response = await axiosInstance.post('/api/v2/login', {
+      username: username,
+      password: password,
     });
     return response.data;
   },
