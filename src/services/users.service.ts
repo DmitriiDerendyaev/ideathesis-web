@@ -28,4 +28,14 @@ export const usersService = {
     const response = await axiosInstance.get<User>(`/api/students/${guid}`);
     return response.data;
   },
+
+  async searchEmployeesBySubdivision(subdivisionName: string, fullName: string, page = 0, size = 5) {
+    const response = await axiosInstance.get(`/api/employees/search-by-subdivision?subdivisionName=${encodeURIComponent(subdivisionName)}&fullName=${encodeURIComponent(fullName)}&page=${page}&size=${size}`);
+    return response.data;
+  },
+
+  async generateCredentials(employeeGuid: string) {
+    const response = await axiosInstance.post(`/api/employees/${employeeGuid}/generate-credentials`);
+    return response.data;
+  },
 }; 

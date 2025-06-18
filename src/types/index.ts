@@ -3,6 +3,7 @@ export interface User {
   fullName: string;
   email: string;
   role: string;
+  userType?: string;
 }
 
 export interface Topic {

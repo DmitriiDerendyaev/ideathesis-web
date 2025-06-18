@@ -38,10 +38,11 @@ const Login: React.FC = () => {
       setError(null);
       const tokens = await authService.login(data.username, data.password);
       login(tokens);
-      if (tokens.user) {
-        // user сохранится в контексте
+      if (tokens.user?.userType === 'superuser') {
+        navigate('/superuser');
+      } else {
+        navigate('/dashboard');
       }
-      navigate('/dashboard');
     } catch (err) {
       setError('Неверный логин или пароль');
     } finally {

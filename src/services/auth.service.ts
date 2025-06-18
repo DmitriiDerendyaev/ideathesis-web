@@ -18,4 +18,13 @@ export const authService = {
     });
     return response.data;
   },
+
+  async generateCredentials(targetGuid: string, username: string, password: string) {
+    const response = await axiosInstance.post('/api/v2/generate-credentials', {
+      targetGuid,
+      username,
+      password,
+    });
+    return response.data;
+  },
 }; 

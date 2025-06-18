@@ -4,6 +4,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Login from './components/auth/Login';
 import MainPage from './components/dashboard/MainPage';
+import SuperuserPage from './components/superuser/SuperuserPage';
 
 // Временные компоненты
 const TopicList = () => <div>Topic List Page</div>;
@@ -74,6 +75,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <NotificationList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/superuser"
+              element={
+                <ProtectedRoute>
+                  <SuperuserPage />
                 </ProtectedRoute>
               }
             />
