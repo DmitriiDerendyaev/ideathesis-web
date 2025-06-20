@@ -38,4 +38,16 @@ export const usersService = {
     const response = await axiosInstance.post(`/api/employees/${employeeGuid}/generate-credentials`);
     return response.data;
   },
+
+  async searchStudents(groupName: string, departmentName: string, fullName: string, page = 0, size = 15) {
+    const params = new URLSearchParams();
+    if (groupName) params.append('groupName', groupName);
+    if (departmentName) params.append('departmentName', departmentName);
+    if (fullName) params.append('fullName', fullName);
+    params.append('page', page.toString());
+    params.append('size', size.toString());
+    
+    const response = await axiosInstance.get(`/api/students/search?${params.toString()}`);
+    return response.data;
+  },
 }; 

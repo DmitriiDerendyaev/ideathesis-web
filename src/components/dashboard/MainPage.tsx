@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   AppBar, Toolbar, Typography, Button, Box, Container, Paper, Avatar, TextField, CircularProgress, Alert, InputBase,
-  ButtonGroup
+  ButtonGroup, Modal, Table, TableBody, TableCell, TableContainer, TableHead, TableRow
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -13,11 +13,23 @@ import { useNavigate } from 'react-router-dom';
 import type { Topic, User } from '../../types';
 import { TopicStatus } from '../../types';
 import { useTheme } from '@mui/material/styles';
+import { authService } from '../../services/auth.service';
+import { transliterate as tr } from 'transliteration';
 
 interface PendingTopic {
   topic: Topic;
   studentGuid: string;
   createdAt?: string;
+}
+
+interface StudentAllDto {
+  guid: string;
+  fullName: string;
+  email: string;
+  userType: string;
+  course: number;
+  studentGroup: { name: string };
+  department: { name: string };
 }
 
 const MainPage: React.FC = () => {
@@ -33,6 +45,15 @@ const MainPage: React.FC = () => {
   const theme = useTheme();
   const isCommentEmpty = comment.trim() === '';
   const [commentErrorMessage, setCommentErrorMessage] = useState<string | null>(null);
+  
+  // Состояние для модального окна студентов
+  const [studentModalOpen, setStudentModalOpen] = useState(false);
+  const [groupName, setGroupName] = useState('');
+  const [departmentName, setDepartmentName] = useState('');
+  const [studentFullName, setStudentFullName] = useState('');
+  const [studentResults, setStudentResults] = useState<StudentAllDto[]>([]);
+  const [studentLoading, setStudentLoading] = useState(false);
+  const [studentError, setStudentError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProfileAndTopics = async () => {
@@ -98,6 +119,55 @@ const MainPage: React.FC = () => {
     }
   };
 
+  const handleStudentSearch = async () => {
+    setStudentLoading(true);
+    setStudentError(null);
+    try {
+      const data = await usersService.searchStudents(groupName, departmentName, studentFullName);
+      setStudentResults(data.content || data);
+    } catch (e) {
+      setStudentError('Ошибка поиска студентов');
+    } finally {
+      setStudentLoading(false);
+    }
+  };
+
+  const handleGenerateStudentCredentials = async (student: StudentAllDto) => {
+    try {
+      const username = getInitialsAndSurnameLatin(student.fullName);
+      const password = generateReadablePassword();
+      await authService.generateCredentials(student.guid, username, password);
+      // Формируем CSV
+      const csv = `ФИО,Группа,Username,Password\n"${student.fullName}","${student.studentGroup?.name || ''}","${username}","${password}"\n`;
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `student_credentials_${username}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch {
+      alert('Ошибка генерации учетных данных');
+    }
+  };
+
+  function getInitialsAndSurnameLatin(fullName: string) {
+    const parts = fullName.trim().split(' ');
+    if (parts.length < 2) return tr(fullName);
+    const surname = tr(parts[0]);
+    const initials = parts.slice(1).map(p => tr(p[0])).join('');
+    return `${initials}${surname}`;
+  }
+
+  function generateReadablePassword() {
+    const words = ['Sun', 'Book', 'Cat', 'Dog', 'Sky', 'Tree', 'Star', 'Fish', 'Moon', 'Bird', 'Fox', 'Wolf', 'Bear', 'Lion', 'Rose', 'Leaf', 'Wind', 'Rain', 'Snow', 'Fire'];
+    const word = words[Math.floor(Math.random() * words.length)];
+    const digits = Math.floor(10 + Math.random() * 90);
+    return `${word}${digits}`;
+  }
+
   if (loading || !profile) return (
     <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
       <CircularProgress />
@@ -115,6 +185,7 @@ const MainPage: React.FC = () => {
           </Typography>
           <Button color="inherit">Главная</Button>
           <Button color="inherit">Уведомления</Button>
+          <Button color="inherit" onClick={() => setStudentModalOpen(true)}>Генерация данных студентов</Button>
           <Box sx={{ mx: 2, display: 'flex', alignItems: 'center', bgcolor: 'background.paper', borderRadius: 1, px: 1 }}>
             <SearchIcon sx={{ color: 'text.secondary' }} />
             <InputBase placeholder="Search in site" sx={{ ml: 1, flex: 1, color: 'text.primary' }} />
@@ -124,6 +195,70 @@ const MainPage: React.FC = () => {
           </Button>
         </Toolbar>
       </AppBar>
+
+      {/* Модальное окно для студентов */}
+      <Modal open={studentModalOpen} onClose={() => setStudentModalOpen(false)}>
+        <Paper sx={{ p: 4, maxWidth: 800, mx: 'auto', mt: 10, maxHeight: '80vh', overflow: 'auto' }}>
+          <Typography variant="h6" mb={2}>Поиск студента</Typography>
+          <Box display="flex" gap={2} mb={2} flexWrap="wrap">
+            <TextField
+              label="Группа"
+              value={groupName}
+              onChange={e => setGroupName(e.target.value)}
+              sx={{ minWidth: 150 }}
+            />
+            <TextField
+              label="Кафедра"
+              value={departmentName}
+              onChange={e => setDepartmentName(e.target.value)}
+              sx={{ minWidth: 150 }}
+            />
+            <TextField
+              label="ФИО"
+              value={studentFullName}
+              onChange={e => setStudentFullName(e.target.value)}
+              sx={{ minWidth: 150 }}
+            />
+            <Button variant="contained" onClick={handleStudentSearch} disabled={studentLoading}>
+              {studentLoading ? <CircularProgress size={20} /> : 'Поиск'}
+            </Button>
+          </Box>
+          {studentError && <Alert severity="error" sx={{ mb: 2 }}>{studentError}</Alert>}
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>ФИО</TableCell>
+                  <TableCell>Группа</TableCell>
+                  <TableCell>Кафедра</TableCell>
+                  <TableCell>Курс</TableCell>
+                  <TableCell>Email</TableCell>
+                  <TableCell>Действия</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {studentResults.map(student => (
+                  <TableRow key={student.guid}>
+                    <TableCell>{student.fullName}</TableCell>
+                    <TableCell>{student.studentGroup?.name || '—'}</TableCell>
+                    <TableCell>{student.department?.name || '—'}</TableCell>
+                    <TableCell>{student.course || '—'}</TableCell>
+                    <TableCell>{student.email || '—'}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="outlined"
+                        onClick={() => handleGenerateStudentCredentials(student)}
+                      >
+                        Сгенерировать
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      </Modal>
 
       {/* Profile */}
       <Container maxWidth={false} sx={{ px: { xs: 2, sm: 4, md: 6 }, py: 4 }}>
@@ -243,7 +378,7 @@ const MainPage: React.FC = () => {
                       <Button
                         color="primary"
                         sx={{ fontWeight: 700, py: 1, borderWidth: 2 }}
-                        onClick={() => handleDecision(TopicStatus.PENDING)}
+                        onClick={() => handleDecision(TopicStatus.NEEDS_REVISION)}
                       >
                         Требуется уточнение
                       </Button>
