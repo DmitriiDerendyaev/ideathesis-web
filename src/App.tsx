@@ -5,6 +5,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import Login from './components/auth/Login';
 import MainPage from './components/dashboard/MainPage';
 import SuperuserPage from './components/superuser/SuperuserPage';
+import AllTopicsPage from './components/dashboard/AllTopicsPage';
 
 // Временные компоненты
 const TopicList = () => <div>Topic List Page</div>;
@@ -83,6 +84,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <SuperuserPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/all-topics"
+              element={
+                <ProtectedRoute>
+                  <AllTopicsPage />
                 </ProtectedRoute>
               }
             />

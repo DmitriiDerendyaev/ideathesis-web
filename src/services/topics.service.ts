@@ -65,4 +65,9 @@ export const topicsService = {
     );
     return response.data;
   },
+
+  async getAllTopicsForTeacher(teacherGuid: string) {
+    const response = await axiosInstance.get(`/api/topics/teachers/${teacherGuid}/topics`);
+    return response.data;
+  },
 }; 

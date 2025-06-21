@@ -186,6 +186,7 @@ const MainPage: React.FC = () => {
           <Button color="inherit">Главная</Button>
           <Button color="inherit">Уведомления</Button>
           <Button color="inherit" onClick={() => setStudentModalOpen(true)}>Генерация данных студентов</Button>
+          <Button color="inherit" onClick={() => navigate('/all-topics')}>Все заявки</Button>
           <Box sx={{ mx: 2, display: 'flex', alignItems: 'center', bgcolor: 'background.paper', borderRadius: 1, px: 1 }}>
             <SearchIcon sx={{ color: 'text.secondary' }} />
             <InputBase placeholder="Search in site" sx={{ ml: 1, flex: 1, color: 'text.primary' }} />
